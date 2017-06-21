@@ -147,6 +147,21 @@ object Crypto {
                     "at the cost of larger key sizes and loss of compatibility."
     )
 
+    /**
+     * Corda composite key type
+     */
+    val COMPOSITE_KEY = SignatureScheme(
+            SPHINCS256_SHA256.schemeNumberID + 1,
+            "COMPOSITE",
+            CompositeSignature.ALGORITHM_IDENTIFIER.algorithm,
+            BouncyCastleProvider.PROVIDER_NAME,
+            "COMPOSITE",
+            "COMPOSITESIG",
+            null,
+            3072,
+            "Composite keys "
+    )
+
     /** Our default signature scheme if no algorithm is specified (e.g. for key generation). */
     val DEFAULT_SIGNATURE_SCHEME = EDDSA_ED25519_SHA512
 
