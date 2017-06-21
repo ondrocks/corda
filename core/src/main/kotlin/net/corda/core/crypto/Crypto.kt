@@ -153,13 +153,14 @@ object Crypto {
     val COMPOSITE_KEY = SignatureScheme(
             SPHINCS256_SHA256.schemeNumberID + 1,
             "COMPOSITE",
-            CompositeSignature.ALGORITHM_IDENTIFIER.algorithm,
+            AlgorithmIdentifier(CompositeSignature.ALGORITHM_IDENTIFIER.algorithm, null),
+            emptyList(),
             BouncyCastleProvider.PROVIDER_NAME,
             "COMPOSITE",
             "COMPOSITESIG",
             null,
-            3072,
-            "Composite keys "
+            null,
+            "Composite keys composed from individual public keys"
     )
 
     /** Our default signature scheme if no algorithm is specified (e.g. for key generation). */
@@ -174,7 +175,8 @@ object Crypto {
             ECDSA_SECP256K1_SHA256,
             ECDSA_SECP256R1_SHA256,
             EDDSA_ED25519_SHA512,
-            SPHINCS256_SHA256
+            SPHINCS256_SHA256,
+            COMPOSITE_KEY
     ).associateBy { it.schemeCodeName }
 
     /**
@@ -558,7 +560,7 @@ object Crypto {
         if (signatureScheme.algSpec != null)
             keyPairGenerator.initialize(signatureScheme.algSpec, newSecureRandom())
         else
-            keyPairGenerator.initialize(signatureScheme.keySize, newSecureRandom())
+            keyPairGenerator.initialize(signatureScheme.keySize!!, newSecureRandom())
         return keyPairGenerator.generateKeyPair()
     }
 
