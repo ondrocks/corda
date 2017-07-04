@@ -20,6 +20,9 @@ UNRELEASED
 * Mock identity constants used in tests, such as ``ALICE``, ``BOB``, ``DUMMY_NOTARY``, have moved to ``net.corda.testing``
   in the ``test-utils`` module.
 
+* Data Vending service has been removed in this release to enhance data security. CorDapp developers should use the new
+  ``SendDataFlow`` in the flow logic to allow data access from their corresponding counter-flow.
+
 Milestone 13
 ------------
 
