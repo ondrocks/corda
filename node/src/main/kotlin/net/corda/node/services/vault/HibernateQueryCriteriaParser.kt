@@ -273,8 +273,8 @@ class HibernateQueryCriteriaParser(val contractType: Class<out ContractState>,
         log.trace { "Parsing OR QueryCriteria composition: $left OR $right" }
 
         var predicateSet = mutableSetOf<Predicate>()
-        val leftPredicates = parse(left)
-        val rightPredicates = parse(right)
+        val (_, leftPredicates) = parse(left)
+        val (_, rightPredicates) = parse(right)
 
         val orPredicate = criteriaBuilder.or(*leftPredicates.toTypedArray(), *rightPredicates.toTypedArray())
         predicateSet.add(orPredicate)
@@ -286,16 +286,16 @@ class HibernateQueryCriteriaParser(val contractType: Class<out ContractState>,
         log.trace { "Parsing AND QueryCriteria composition: $left AND $right" }
 
         var predicateSet = mutableSetOf<Predicate>()
-        val leftPredicates = parse(left)
-        val rightPredicates = parse(right)
+        val (_, leftPredicates) = parse(left)
+        val (_, rightPredicates) = parse(right)
 
-        val andPredicate = criteriaBuilder.and(criteriaBuilder.and(*leftPredicates.toTypedArray(), *rightPredicates.toTypedArray()))
+        val andPredicate = criteriaBuilder.and(*leftPredicates.toTypedArray(), *rightPredicates.toTypedArray())
         predicateSet.add(andPredicate)
 
         return predicateSet
     }
 
-    override fun parse(criteria: QueryCriteria, sorting: Sort?): Collection<Predicate> {
+    override fun parse(criteria: QueryCriteria, sorting: Sort?): Pair<List<Root<out Any>>, List<Predicate>> {
         val predicateSet = criteria.visit(this)
 
         sorting?.let {
@@ -308,7 +308,7 @@ class HibernateQueryCriteriaParser(val contractType: Class<out ContractState>,
         val combinedPredicates = joinPredicates.plus(predicateSet)
         criteriaQuery.where(*combinedPredicates.toTypedArray())
 
-        return predicateSet
+        return Pair(selections, combinedPredicates)
     }
 
     override fun parseCriteria(criteria: CommonQueryCriteria): Collection<Predicate> {
@@ -329,10 +329,10 @@ class HibernateQueryCriteriaParser(val contractType: Class<out ContractState>,
         var orderCriteria = mutableListOf<Order>()
 
         sorting.columns.map { (sortAttribute, direction) ->
-            val (entityStateClass, entityStateColumnName) =
+            val (entityStateClass, entityStateAttributeParent, entityStateAttributeChild) =
                 when(sortAttribute) {
                     is SortAttribute.Standard -> parse(sortAttribute.attribute)
-                    is SortAttribute.Custom -> Pair(sortAttribute.entityStateClass, sortAttribute.entityStateColumnName)
+                    is SortAttribute.Custom -> Triple(sortAttribute.entityStateClass, sortAttribute.entityStateColumnName, null)
             }
             val sortEntityRoot =
                     rootEntities.getOrElse(entityStateClass) {
@@ -345,10 +345,16 @@ class HibernateQueryCriteriaParser(val contractType: Class<out ContractState>,
                     }
             when (direction) {
                 Sort.Direction.ASC -> {
-                    orderCriteria.add(criteriaBuilder.asc(sortEntityRoot.get<String>(entityStateColumnName)))
+                    if (entityStateAttributeChild != null)
+                        orderCriteria.add(criteriaBuilder.asc(sortEntityRoot.get<String>(entityStateAttributeParent).get<String>(entityStateAttributeChild)))
+                    else
+                        orderCriteria.add(criteriaBuilder.asc(sortEntityRoot.get<String>(entityStateAttributeParent)))
                 }
                 Sort.Direction.DESC ->
-                    orderCriteria.add(criteriaBuilder.desc(sortEntityRoot.get<String>(entityStateColumnName)))
+                    if (entityStateAttributeChild != null)
+                        orderCriteria.add(criteriaBuilder.desc(sortEntityRoot.get<String>(entityStateAttributeParent).get<String>(entityStateAttributeChild)))
+                    else
+                        orderCriteria.add(criteriaBuilder.desc(sortEntityRoot.get<String>(entityStateAttributeParent)))
             }
         }
         if (orderCriteria.isNotEmpty()) {
@@ -357,17 +363,20 @@ class HibernateQueryCriteriaParser(val contractType: Class<out ContractState>,
         }
     }
 
-    private fun parse(sortAttribute: Sort.Attribute): Pair<Class<out PersistentState>, String> {
-        val entityClassAndColumnName : Pair<Class<out PersistentState>, String> =
+    private fun parse(sortAttribute: Sort.Attribute): Triple<Class<out PersistentState>, String, String?> {
+        val entityClassAndColumnName : Triple<Class<out PersistentState>, String, String?> =
         when(sortAttribute) {
+            is Sort.CommonStateAttribute -> {
+                Triple(VaultSchemaV1.VaultStates::class.java, sortAttribute.attributeParent, sortAttribute.attributeChild)
+            }
             is Sort.VaultStateAttribute -> {
-                Pair(VaultSchemaV1.VaultStates::class.java, sortAttribute.columnName)
+                Triple(VaultSchemaV1.VaultStates::class.java, sortAttribute.attributeName, null)
             }
             is Sort.LinearStateAttribute -> {
-                Pair(VaultSchemaV1.VaultLinearStates::class.java, sortAttribute.columnName)
+                Triple(VaultSchemaV1.VaultLinearStates::class.java, sortAttribute.attributeName, null)
             }
             is Sort.FungibleStateAttribute -> {
-                Pair(VaultSchemaV1.VaultFungibleStates::class.java, sortAttribute.columnName)
+                Triple(VaultSchemaV1.VaultFungibleStates::class.java, sortAttribute.attributeName, null)
             }
             else -> throw VaultQueryException("Invalid sort attribute: $sortAttribute")
         }
