@@ -13,6 +13,7 @@ import net.corda.core.serialization.OpaqueBytes
 import org.bouncycastle.asn1.x500.X500Name
 import java.time.Instant
 import java.util.*
+import javax.persistence.criteria.Order
 import javax.persistence.criteria.Predicate
 import javax.persistence.criteria.Root
 
@@ -125,7 +126,7 @@ interface IQueryCriteriaParser {
     fun parseCriteria(criteria: QueryCriteria.VaultQueryCriteria): Collection<Predicate>
     fun parseOr(left: QueryCriteria, right: QueryCriteria): Collection<Predicate>
     fun parseAnd(left: QueryCriteria, right: QueryCriteria): Collection<Predicate>
-    fun parse(criteria: QueryCriteria, sorting: Sort? = null) : Pair<List<Root<out Any>>, List<Predicate>>
+    fun parse(criteria: QueryCriteria, sorting: Sort? = null) : Triple<List<Root<out Any>>, List<Predicate>, List<Order>>
 }
 
 infix fun QueryCriteria.and(criteria: QueryCriteria): QueryCriteria = AndComposition(this, criteria)
