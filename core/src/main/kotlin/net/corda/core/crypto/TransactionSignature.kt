@@ -4,7 +4,7 @@ import java.security.InvalidKeyException
 import java.security.SignatureException
 
 /**
- * A wrapper around a digital signature accompanied with metadata, see [MetaData.Full] and [DigitalSignature].
+ * A wrapper around a digital signature accompanied with metadata, see [MetaData] and [DigitalSignature].
  * The signature protocol works as follows: s = sign(MetaData.hashBytes).
  */
 open class TransactionSignature(val signatureData: ByteArray, val metaData: MetaData) : DigitalSignature(signatureData) {
@@ -17,6 +17,6 @@ open class TransactionSignature(val signatureData: ByteArray, val metaData: Meta
      * if this signatureData algorithm is unable to process the input data provided, etc.
      * @throws IllegalArgumentException if the signature scheme is not supported for this private key or if any of the clear or signature data is empty.
      */
-    @Throws(InvalidKeyException::class, SignatureException::class, IllegalArgumentException::class)
-    fun verify(): Boolean = Crypto.doVerify(metaData.publicKey, signatureData, metaData.bytes())
+    @Throws(InvalidKeyException::class, SignatureException::class)
+    fun verify(): Boolean = Crypto.doVerify(this.metaData.publicKey, this.metaData.merkleRoot, this)
 }

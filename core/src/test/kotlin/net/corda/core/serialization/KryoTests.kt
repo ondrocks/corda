@@ -3,10 +3,10 @@ package net.corda.core.serialization
 import com.esotericsoftware.kryo.Kryo
 import com.google.common.primitives.Ints
 import net.corda.core.crypto.*
-import net.corda.testing.ALICE
-import net.corda.testing.BOB
 import net.corda.node.services.messaging.Ack
 import net.corda.node.services.persistence.NodeAttachmentService
+import net.corda.testing.ALICE
+import net.corda.testing.BOB
 import net.corda.testing.BOB_PUBKEY
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -16,7 +16,8 @@ import org.junit.Test
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.InputStream
-import java.security.cert.*
+import java.security.cert.CertPath
+import java.security.cert.CertificateFactory
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
@@ -114,10 +115,8 @@ class KryoTests {
         val testString = "Hello World"
         val testBytes = testString.toByteArray()
         val keyPair1 = Crypto.generateKeyPair("ECDSA_SECP256K1_SHA256")
-        val bitSet = java.util.BitSet(10)
-        bitSet.set(3)
 
-        val meta = MetaData("ECDSA_SECP256K1_SHA256", "M9", SignatureType.FULL, Instant.now(), bitSet, bitSet, testBytes, keyPair1.public)
+        val meta = MetaData(1, testBytes.sha256(), keyPair1.public)
         val serializedMetaData = meta.bytes()
         val meta2 = serializedMetaData.deserialize<MetaData>()
         assertEquals(meta2, meta)
