@@ -16,7 +16,7 @@ class TransactionSignatureTest {
         val keyPair = Crypto.generateKeyPair("ECDSA_SECP256K1_SHA256")
 
         // Create a MetaData object.
-        val meta = MetaData(1, testBytes.sha256(), keyPair.public)
+        val meta = MetaData(testBytes.sha256(), keyPair.public, ExtraMetaData(1))
 
         // Sign the meta object.
         val transactionSignature: TransactionSignature = keyPair.private.sign(meta)
@@ -33,7 +33,7 @@ class TransactionSignatureTest {
     fun `MetaData Full failure public key has changed`() {
         val keyPair1 = Crypto.generateKeyPair("ECDSA_SECP256K1_SHA256")
         val keyPair2 = Crypto.generateKeyPair("ECDSA_SECP256K1_SHA256")
-        val meta = MetaData(1, testBytes.sha256(), keyPair1.public)
+        val meta = MetaData(testBytes.sha256(), keyPair1.public, ExtraMetaData(1))
         val transactionSignature = keyPair1.private.sign(meta)
         Crypto.doVerify(keyPair2.public, testBytes.sha256(), transactionSignature)
     }
@@ -42,7 +42,7 @@ class TransactionSignatureTest {
     @Test(expected = IllegalArgumentException::class)
     fun `MetaData Full failure clearData has changed`() {
         val keyPair = Crypto.generateKeyPair("ECDSA_SECP256K1_SHA256")
-        val meta = MetaData(1, testBytes.sha256(), keyPair.public)
+        val meta = MetaData(testBytes.sha256(), keyPair.public, ExtraMetaData(1))
         val transactionSignature = keyPair.private.sign(meta)
         Crypto.doVerify(keyPair.public, (testBytes + testBytes).sha256(), transactionSignature)
     }

@@ -9,6 +9,7 @@ import de.javakaffee.kryoserializers.BitSetSerializer
 import de.javakaffee.kryoserializers.UnmodifiableCollectionsSerializer
 import de.javakaffee.kryoserializers.guava.*
 import net.corda.core.crypto.CompositeKey
+import net.corda.core.crypto.ExtraMetaData
 import net.corda.core.crypto.MetaData
 import net.corda.core.node.CordaPluginRegistry
 import net.corda.core.transactions.SignedTransaction
@@ -32,7 +33,6 @@ import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.io.InputStream
 import java.security.cert.CertPath
-import java.security.cert.X509Certificate
 import java.util.*
 
 object DefaultKryoCustomizer {
@@ -92,6 +92,7 @@ object DefaultKryoCustomizer {
             addDefaultSerializer(SerializeAsToken::class.java, SerializeAsTokenSerializer<SerializeAsToken>())
 
             register(MetaData::class.java, MetaDataSerializer)
+            register(ExtraMetaData::class.java, ExtraMetaDataSerializer)
             register(BitSet::class.java, BitSetSerializer())
             register(Class::class.java, ClassSerializer)
 

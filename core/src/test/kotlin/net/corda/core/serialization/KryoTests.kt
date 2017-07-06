@@ -116,9 +116,22 @@ class KryoTests {
         val testBytes = testString.toByteArray()
         val keyPair1 = Crypto.generateKeyPair("ECDSA_SECP256K1_SHA256")
 
-        val meta = MetaData(1, testBytes.sha256(), keyPair1.public)
+        val meta = MetaData(testBytes.sha256(), keyPair1.public, ExtraMetaData(1))
         val serializedMetaData = meta.bytes()
         val meta2 = serializedMetaData.deserialize<MetaData>()
+        assertEquals(meta2, meta)
+    }
+
+    @Test
+    fun `serialize ExtraMetaData - deserialise and create a MetaData`() {
+        val testString = "Hello World"
+        val testBytes = testString.toByteArray()
+        val keyPair1 = Crypto.generateKeyPair("ECDSA_SECP256K1_SHA256")
+
+        val meta = MetaData(testBytes.sha256(), keyPair1.public, ExtraMetaData(1))
+        val serializedBExtraMetaData = meta.extraMetaDataBytes()
+        val extraMetaData = serializedBExtraMetaData.deserialize<ExtraMetaData>()
+        val meta2 = MetaData(meta.merkleRoot, meta.publicKey, extraMetaData)
         assertEquals(meta2, meta)
     }
 

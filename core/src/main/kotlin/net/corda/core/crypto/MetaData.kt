@@ -10,31 +10,36 @@ import java.security.PublicKey
  * [PublicKey]. MetaData can be extended to support a universal digital signature model enabling partial signatures and
  * attaching extra information, such as a user's timestamp or other application-specific fields.
  *
- * @param platformVersion DLT's version.
  * @param merkleRoot the Merkle root of the transaction.
  * @param publicKey the signer's public key.
+ * @param extraMetaData other meta data required, which usually is not included in the transaction itself.
  */
 @CordaSerializable
-open class MetaData(
-        val platformVersion: Int,
-        val merkleRoot: SecureHash,
-        val publicKey: PublicKey) {
+class MetaData(val merkleRoot: SecureHash,
+               val publicKey: PublicKey,
+               val extraMetaData: ExtraMetaData) {
 
     fun bytes() = this.serialize().bytes
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is MetaData) return false
-        return (platformVersion == other.platformVersion
+        return (extraMetaData == other.extraMetaData
                 && merkleRoot == other.merkleRoot
                 && publicKey == other.publicKey)
     }
 
     override fun hashCode(): Int {
-        var result = platformVersion
+        var result = extraMetaData.hashCode()
         result = 31 * result + merkleRoot.hashCode()
         result = 31 * result + publicKey.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return "MetaData(merkleRoot=$merkleRoot, publicKey=$publicKey, extraMetaData=$extraMetaData)"
+    }
+
+    fun extraMetaDataBytes() = extraMetaData.bytes()
 }
 

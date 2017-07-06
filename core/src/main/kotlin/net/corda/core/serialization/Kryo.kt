@@ -570,18 +570,33 @@ fun <T> Kryo.withoutReferences(block: () -> T): T {
 @ThreadSafe
 object MetaDataSerializer : Serializer<MetaData>() {
     override fun write(kryo: Kryo, output: Output, obj: MetaData) {
-        output.writeInt(obj.platformVersion)
         kryo.writeClassAndObject(output, obj.merkleRoot)
         output.writeBytesWithLength(obj.publicKey.encoded)
+        kryo.writeClassAndObject(output, obj.extraMetaData)
     }
 
     @Suppress("UNCHECKED_CAST")
     @Throws(InvalidKeySpecException::class)
     override fun read(kryo: Kryo, input: Input, type: Class<MetaData>): MetaData {
-        val platformVersion = input.readInt()
         val merkleRoot = kryo.readClassAndObject(input) as SecureHash
         val publicKey = Crypto.decodePublicKey(input.readBytesWithLength())
-        return MetaData(platformVersion, merkleRoot, publicKey)
+        val extraMetaData = kryo.readClassAndObject(input) as ExtraMetaData
+        return MetaData(merkleRoot, publicKey, extraMetaData)
+    }
+}
+
+/** For serialising an ExtraMetaData object. */
+@ThreadSafe
+object ExtraMetaDataSerializer : Serializer<ExtraMetaData>() {
+    override fun write(kryo: Kryo, output: Output, obj: ExtraMetaData) {
+        output.writeInt(obj.platformVersion)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Throws(InvalidKeySpecException::class)
+    override fun read(kryo: Kryo, input: Input, type: Class<ExtraMetaData>): ExtraMetaData {
+        val platformVersion = input.readInt()
+        return ExtraMetaData(platformVersion)
     }
 }
 
