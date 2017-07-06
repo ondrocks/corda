@@ -23,6 +23,9 @@ UNRELEASED
 * In Java, ``QueryCriteriaUtilsKt`` has moved to ``QueryCriteriaUtils``. Also ``and`` and ``or`` are now instance methods
   of ``QueryCrtieria``.
 
+* Added additional common Sort attributes (see ``Sort.CommandStateAttribute``) for use in Vault Query criteria
+  to include STATE_REF, STATE_REF_TXN_ID, STATE_REF_INDEX
+
 Milestone 13
 ------------
 
