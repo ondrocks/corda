@@ -4,6 +4,7 @@ import com.google.common.net.HostAndPort
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigUtil
 import net.corda.core.noneOrSingle
+import net.corda.core.utilities.validateX500Name
 import org.bouncycastle.asn1.x500.X500Name
 import org.slf4j.LoggerFactory
 import java.net.Proxy
@@ -71,7 +72,7 @@ private fun Config.getSingleValue(path: String, type: KType): Any? {
         Path::class -> Paths.get(getString(path))
         URL::class -> URL(getString(path))
         Properties::class -> getConfig(path).toProperties()
-        X500Name::class -> X500Name(getString(path))
+        X500Name::class -> X500Name(getString(path)).apply(::validateX500Name)
         else -> if (typeClass.java.isEnum) {
             parseEnum(typeClass.java, getString(path))
         } else {
